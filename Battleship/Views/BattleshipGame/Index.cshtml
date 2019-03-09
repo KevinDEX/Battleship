@@ -47,7 +47,7 @@
                 @for (int y = 1; y <= 10; y++)
                 {
                     string id = "P2" + x.ToString() + y.ToString();
-                    <td id="@id" onmouseover="highlightShip('@x','@y')" onclick="placeShip('@x','@y')"></td>
+                    <td id="@id" onmouseenter="highlightShip('@x','@y')" onclick="placeShip('@x','@y')"></td>
                 }
             </tr>
         }

@@ -18,12 +18,12 @@ var fullGameState;
 $(document).ready(function () {
 
     initPieces();
-    drawBoard();
+    refreshBoard();
 
     window.setInterval(function () {
         updateGameState();
         updateGameObj();
-        drawBoard();
+        refreshBoard();
        drawOpponentBoard();
     }, 2000);
 });
@@ -32,8 +32,8 @@ $(document).ready(function () {
 function highlightShip(x, y) {
 
 
-    $("td[id^=P2]").css("background-color", "white");
-    drawBoard();
+   // $("td[id^=P2]").css("background-color", "white");
+    drawBoard(myBoard);
     
         for (s = 0; s < selectedShip.length; s++) {
             if (selectedShip.orientation == 0) {
@@ -62,7 +62,7 @@ function rotateShip() {
 }
 
 function placeShip() {
-    //alert('place ship');
+
     selectedShip.startCoordinate = mouseCoordinates;
 
     var args = { "player": username, "ship": selectedShip, "location": mouseCoordinates };
@@ -74,7 +74,7 @@ function placeShip() {
         type:"POST",
         success: function (result) {
             selectedShip = result;
-            drawBoard();
+            refreshBoard();
         }
     });
 }
@@ -136,7 +136,7 @@ function initPieces() {
     }
 }
 
-function drawBoard() {
+function refreshBoard() {
 
     updateGameState();
 
@@ -147,8 +147,8 @@ function drawBoard() {
         type: "POST",
         success: function (result) {
             myBoard = result;
-
-            for (x = 0; x < myBoard.playerGrid.length; x++) {
+            drawBoard(myBoard);
+            /*for (x = 0; x < myBoard.playerGrid.length; x++) {
                 for (y = 0; y < myBoard.playerGrid[x].length; y++) {
                     if (myBoard.playerGrid[x][y].ship != null) {
                         if (myBoard.playerGrid[x][y].shot == "2") {
@@ -167,10 +167,33 @@ function drawBoard() {
                     }
 
                 }
-            }
+            }*/
         }
     });
 
+}
+
+function drawBoard(myBoard) {
+    for (x = 0; x < myBoard.playerGrid.length; x++) {
+        for (y = 0; y < myBoard.playerGrid[x].length; y++) {
+            if (myBoard.playerGrid[x][y].ship != null) {
+                if (myBoard.playerGrid[x][y].shot == "2") {
+                    $("#P2" + myBoard.playerGrid[x][y].coordinates.X + myBoard.playerGrid[x][y].coordinates.Y).css('background-color', "red");
+                }
+                else {
+                    $("#P2" + myBoard.playerGrid[x][y].coordinates.X + myBoard.playerGrid[x][y].coordinates.Y).css('background-color', "black");
+                }
+
+            }
+            else if (myBoard.playerGrid[x][y].shot == "0") {
+                $("#P2" + myBoard.playerGrid[x][y].coordinates.X + myBoard.playerGrid[x][y].coordinates.Y).css('background-color', "blue");
+            }
+            else if (myBoard.playerGrid[x][y].shot == "1") {
+                $("#P2" + myBoard.playerGrid[x][y].coordinates.X + myBoard.playerGrid[x][y].coordinates.Y).css('background-color', "white");
+            }
+
+        }
+    }
 }
 
 function drawOpponentBoard() {
@@ -227,30 +250,51 @@ function updateGameObj() {
         type: "GET",
         success: function (result) {
             fullGameState = result;
-
-            var mySunkShips;
-            var opponentsSunkShips;
-
-            if (username == fullGameState.player1Name) {
-                mySunkShips = fullGameState.p1SunkShips;
-                opponentsSunkShips = fullGameState.p2SunkShips;
-            }
-            else if (username == fullGameState.player2Name) {
-                mySunkShips = fullGameState.p2SunkShips;
-                opponentsSunkShips = fullGameState.p1SunkShips;
-            }
-
-            $('#opponentsSunk').empty();
-            for (var s in opponentsSunkShips) { 
-  
-                $('#opponentsSunk').append('<li>' + opponentsSunkShips[s].name + '</li>');
-            }
-
-            $('#mySunk').empty();
-            for (var s in mySunkShips) {
-
-                $('#mySunk').append('<li>' + mySunkShips[s].name + '</li>');
-            }
+            displaySunkShips();
         }
     });
+}
+
+function displaySunkShips() {
+
+    var myPlayer;
+    var myOpponent;
+
+    $.ajax({
+        contentType: "application/json",
+        url: "/api/BattleshipGame/GetPlayer",
+        data: JSON.stringify(username),
+        type: "POST",
+        success: function (result) {
+            myPlayer = result;
+
+            $.ajax({
+                contentType: "application/json",
+                url: "/api/BattleshipGame/GetOpponent",
+                data: JSON.stringify(username),
+                type: "POST",
+                success: function (result) {
+                    myOpponent = result;
+
+                    mySunkShips = myPlayer.SunkShips;
+                    opponentsSunkShips = myOpponent.SunkShips;
+
+                    $('#opponentsSunk').empty();
+                    for (var s in opponentsSunkShips) {
+
+                        $('#opponentsSunk').append('<li>' + opponentsSunkShips[s].name + '</li>');
+                    }
+
+                    $('#mySunk').empty();
+                    for (var s in mySunkShips) {
+
+                        $('#mySunk').append('<li>' + mySunkShips[s].name + '</li>');
+                    }
+
+                }
+            });
+
+        }
+    });
+
 }

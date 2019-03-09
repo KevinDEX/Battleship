@@ -12,127 +12,37 @@ namespace Battleship.api
     [RoutePrefix("api/BattleshipGame")]
     public class BattleshipGameController : ApiController
     {
-        // GET api/<controller>
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/<controller>/5
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/<controller>
-        public void Post([FromBody]string value)
-        {
-        }
-
-        // PUT api/<controller>/5
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/<controller>/5
-        public void Delete(int id)
-        {
-        }
+        BattleshipGame gameObj = WebApiApplication.BattleshipGameObj;
 
         [HttpPost]
         [Route("JoinGame")]
-        public IHttpActionResult JoinGame([FromBody]string playerName)
+        public Player JoinGame([FromBody]string playerName)
         {
-            BattleshipGame gameObj = WebApiApplication.BattleshipGameObj;
 
-            if (String.IsNullOrEmpty(gameObj.player1Name))
-            {
-                gameObj.player1Name = playerName;
-                return new OkResult(this.Request);
-            }
+            return gameObj.JoinGame(playerName);
 
-            else if (String.IsNullOrEmpty(gameObj.player2Name))
-            {
-                gameObj.player2Name = playerName;
-
-                WebApiApplication.BattleshipGameObj.gameState = GAME_STATES.PLACING_SHIPS;
-
-                return new OkResult(this.Request);
-            }
-
-            return new OkResult(this.Request);
         }
 
         [HttpPost]
        [Route("PlaceShip")]
         public Ship PlaceShip(ShipPlacementParams args)
         {
-            BattleshipGame gameObj = WebApiApplication.BattleshipGameObj;
-            bool shipPlaced = false;
-            
-            if(args.player == gameObj.player1Name)
-            {
-                shipPlaced = gameObj.player1Grid.placeShip(args.ship, args.location);
-                if(shipPlaced)
-                {
-                    gameObj.p1Ships.Remove(gameObj.p1Ships.Last());
-                }
 
-                //returns next ship to place
-                if (gameObj.p1Ships.Count > 0)
-                {
-                    return gameObj.p1Ships.Last();
-                }
-            }
+            return gameObj.PlaceShip(args.player, args.ship, args.location);
 
-            if (args.player == gameObj.player2Name)
-            {
-                shipPlaced = gameObj.player2Grid.placeShip(args.ship, args.location);
-                if (shipPlaced)
-                {
-                    gameObj.p2Ships.Remove(gameObj.p2Ships.Last());
-                }
- 
-
-                //returns next ship to place
-                if (gameObj.p2Ships.Count > 0)
-                {
-                    return gameObj.p2Ships.Last();
-                }
-            }
-
-            if (WebApiApplication.BattleshipGameObj.p1Ships.Count == 0 && WebApiApplication.BattleshipGameObj.p2Ships.Count == 0)
-            {
-                WebApiApplication.BattleshipGameObj.startGame();
-            }
-
-
-            return null;
         }
 
         [HttpPost]
         [Route("GetNextShipToPlace")]
         public Ship GetNextShipToPlace([FromBody]string playerName)
         {
-            BattleshipGame gameObj = WebApiApplication.BattleshipGameObj;
-
-
-            if(playerName == gameObj.player1Name)
+            Player p = gameObj.GetPlayer(playerName);
+            if(p != null)
             {
-                if (gameObj.p1Ships.Count > 0)
+                if (p.ShipsToPlace.Count > 0)
                 {
-                    return gameObj.p1Ships.Last();
+                    return p.ShipsToPlace.Last();
                 }
-
-            }
-
-            if (playerName == gameObj.player2Name)
-            {
-                if (gameObj.p2Ships.Count > 0)
-                {
-                    return gameObj.p2Ships.Last();
-                }
-
             }
 
             return null;
@@ -142,20 +52,12 @@ namespace Battleship.api
         [Route("GetMyBoard")]
         public Board GetMyBoard([FromBody]string playerName)
         {
-            BattleshipGame gameObj = WebApiApplication.BattleshipGameObj;
+            Player p = gameObj.GetPlayer(playerName);
 
-
-            if (playerName == gameObj.player1Name)
+            if(p != null)
             {
-                //var resp = new OkResult()
-                return gameObj.player1Grid;
+                return p.PlayerBoard;
             }
-            if (playerName == gameObj.player2Name)
-            {
-                //var resp = new OkResult()
-                return gameObj.player2Grid;
-            }
-
 
             return null;
         }
@@ -164,99 +66,52 @@ namespace Battleship.api
         [Route("GetOpponentBoard")]
         public Board GetOpponentBoard([FromBody]string playerName)
         {
-            BattleshipGame gameObj = WebApiApplication.BattleshipGameObj;
+            Player p = gameObj.GetOpponent(playerName);
 
-
-            if (playerName == gameObj.player1Name)
+            if (p != null)
             {
-                //var resp = new OkResult()
-                return gameObj.player2Grid;
+                return p.PlayerBoard;
             }
-            if (playerName == gameObj.player2Name)
-            {
-                //var resp = new OkResult()
-                return gameObj.player1Grid;
-            }
-
 
             return null;
+
+        }
+
+        [HttpPost]
+        [Route("GetPlayer")]
+        public Player GetPlayer([FromBody]string playerName)
+        {
+           return gameObj.GetPlayer(playerName);
+        }
+
+        [HttpPost]
+        [Route("GetOpponent")]
+        public Player GetOpponent([FromBody]string playerName)
+        {
+            return gameObj.GetOpponent(playerName);
         }
 
 
         [HttpPost]
         [Route("TakeShot")]
-        public IHttpActionResult TakeShot(TakeShotParams args)
+        public GRID_SHOT TakeShot(TakeShotParams args)
         {
-            BattleshipGame gameObj = WebApiApplication.BattleshipGameObj;
+            return gameObj.TakeShot(args.playerShooting, args.shotCoordinate);
 
-            if(args.playerShooting == gameObj.player1Name)
-            {
-                if(gameObj.gameState == GAME_STATES.PLAYER1_TURN && 
-                    gameObj.player2Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].shot == GRID_SHOT.CLEAR)
-                {
-
-                    if (gameObj.player2Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].ship != null)
-                    {
-                        gameObj.player2Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].ship.hits.Add(args.shotCoordinate);
-                        gameObj.player2Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].shot = GRID_SHOT.HIT;
-
-                        if(gameObj.player2Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].ship.hits.Count ==
-                            gameObj.player2Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].ship.length)
-                        {
-                            gameObj.p2SunkShips.Add(gameObj.player2Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].ship);
-                        }
-                    }
-                    else
-                    {
-                        gameObj.player2Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].shot = GRID_SHOT.MISS;
-                    }
-                    gameObj.gameState = GAME_STATES.PLAYER2_TURN;
-                }
-            }
-            else if (args.playerShooting == gameObj.player2Name)
-            {
-                if (gameObj.gameState == GAME_STATES.PLAYER2_TURN &&
-                    gameObj.player1Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].shot == GRID_SHOT.CLEAR)
-                {
-
-                    if (gameObj.player1Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].ship != null)
-                    {
-                        gameObj.player1Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].ship.hits.Add(args.shotCoordinate);
-                        gameObj.player1Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].shot = GRID_SHOT.HIT;
-                        if (gameObj.player1Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].ship.hits.Count ==
-                           gameObj.player1Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].ship.length)
-                        {
-                            gameObj.p1SunkShips.Add(gameObj.player1Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].ship);
-                        }
-                    }
-                    else
-                    {
-                        gameObj.player1Grid.playerGrid[args.shotCoordinate.BoardX, args.shotCoordinate.BoardY].shot = GRID_SHOT.MISS;
-                    }
-                    gameObj.gameState = GAME_STATES.PLAYER1_TURN;
-                }
-
-            }
-
-            if(gameObj.p1SunkShips.Count == 5 || gameObj.p2SunkShips.Count == 5)
-            {
-                gameObj.gameState = GAME_STATES.GAME_OVER;
-            }
-            return new OkResult(this.Request);
         }
 
         [AcceptVerbs("GET")]
         [Route("GameState")]
         public string GameState()
         {
-            return Enum.GetName(typeof(GAME_STATES),WebApiApplication.BattleshipGameObj.gameState);
+            return Enum.GetName(typeof(GAME_STATES), gameObj.gameState);
         }
 
         [AcceptVerbs("GET")]
         [Route("GameObj")]
         public BattleshipGame GameObj()
         {
-            return WebApiApplication.BattleshipGameObj;
+            return gameObj;
         }
     }
 
