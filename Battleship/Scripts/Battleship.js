@@ -237,7 +237,15 @@ function updateGameState() {
         type: "GET",
         success: function (result) {
             gameState = result;
-            $("#gameStatus").text(gameState);
+
+            if (fullGameState.winner != null) {
+
+                var txt = $("#gameStatus").text();
+                $("#gameStatus").text(gameState + " " + fullGameState.winner.Name + " WINS!!!");
+            }
+            else {
+                $("#gameStatus").text(gameState);
+            }
         }
     });
 }

@@ -13,6 +13,7 @@ namespace Battleship.Models
         private Player player2;
 
         public GAME_STATES gameState;
+        public Player winner;
 
 
         public BattleshipGame()
@@ -32,6 +33,8 @@ namespace Battleship.Models
             else if (player2 == null)
             {
                 player2 = new Player(name);
+
+                gameState = GAME_STATES.PLACING_SHIPS;
 
                 return player2;
             }
@@ -96,7 +99,7 @@ namespace Battleship.Models
                         {
                             opponent.SunkShips.Add(opponent.PlayerBoard.playerGrid[shotLocation.BoardX, shotLocation.BoardY].ship);
 
-                            CheckGameOver();
+                            winner = CheckGameOver();
                         }
                     }
                     else //No ship, mark it a miss
