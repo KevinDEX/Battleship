@@ -104,7 +104,6 @@ function setPlayerName() {
         success: function (result) {
             document.cookie = "playername=" + $("#input_playerName").val();
             location.reload();
-           // $("#lbl_PlayerName").text = $("#input_playerName").val();
 
         }
     });
@@ -148,26 +147,6 @@ function refreshBoard() {
         success: function (result) {
             myBoard = result;
             drawBoard(myBoard);
-            /*for (x = 0; x < myBoard.playerGrid.length; x++) {
-                for (y = 0; y < myBoard.playerGrid[x].length; y++) {
-                    if (myBoard.playerGrid[x][y].ship != null) {
-                        if (myBoard.playerGrid[x][y].shot == "2") {
-                            $("#P2" + myBoard.playerGrid[x][y].coordinates.X + myBoard.playerGrid[x][y].coordinates.Y).css('background-color', "red");
-                        }
-                        else {
-                            $("#P2" + myBoard.playerGrid[x][y].coordinates.X + myBoard.playerGrid[x][y].coordinates.Y).css('background-color', "black");
-                        }
-
-                    }
-                    else if (myBoard.playerGrid[x][y].shot == "0") {
-                        $("#P2" + myBoard.playerGrid[x][y].coordinates.X + myBoard.playerGrid[x][y].coordinates.Y).css('background-color', "blue");
-                    }
-                    else if (myBoard.playerGrid[x][y].shot == "1"){
-                        $("#P2" + myBoard.playerGrid[x][y].coordinates.X + myBoard.playerGrid[x][y].coordinates.Y).css('background-color', "white");
-                    }
-
-                }
-            }*/
         }
     });
 

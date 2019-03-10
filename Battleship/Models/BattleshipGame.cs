@@ -100,6 +100,15 @@ namespace Battleship.Models
                             opponent.SunkShips.Add(opponent.PlayerBoard.playerGrid[shotLocation.BoardX, shotLocation.BoardY].ship);
 
                             winner = CheckGameOver();
+
+                            if(winner != null)
+                            {
+                                System.Threading.Thread.Sleep(30000);
+                                player1 = null;
+                                player2 = null;
+                                gameState = GAME_STATES.WAITING_FOR_PLAYERS;
+                                winner = null;
+                            }
                         }
                     }
                     else //No ship, mark it a miss
